@@ -28,7 +28,6 @@ override_dh_install:
 	test 0 = "`id -u`" || (echo need root privileges; exit 1)
 	install -d --mode=0755 $(TMPDIR)
 	install -d --mode=0755 $(TMPDIR)/usr/bin
-	install -d --mode=0755 $(TMPDIR)/etc
 	install -d --mode=0755 $(TMPDIR)/usr/share/doc/$(PACKAGE)
 	install -d --mode=0755 $(TMPDIR)/usr/share/$(PACKAGE)
 	install -d --mode=0755 $(TMPDIR)/usr/share/$(PACKAGE)/images/
@@ -36,7 +35,6 @@ override_dh_install:
 	install -d --mode=0755 $(TMPDIR)/usr/share/$(PACKAGE)/plugins/
 	install -d --mode=0755 $(TMPDIR)/usr/share/$(PACKAGE)/pygtk_chart/
 	install -d --mode=0755 $(TMPDIR)/usr/share/$(PACKAGE)/scripts/
-	install --mode=0644 oxc.conf $(TMPDIR)/etc/
 	install --mode=0755 debian/openxenmanager.sh $(TMPDIR)/usr/bin/openxenmanager
 	install --mode=0644 *.py $(TMPDIR)/usr/share/$(PACKAGE)/
 	install --mode=0644 oxc.glade $(TMPDIR)/usr/share/$(PACKAGE)/
