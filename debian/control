@@ -1,0 +1,19 @@
+Source: openxenmanager
+Section: admin
+Priority: extra
+Maintainer: Ritesh Raj Sarraf <rrs@debian.org>
+Uploaders: Kugesh Veeraraghavan <kugesh@netapp.com>
+Build-Depends: debhelper (>= 8.0.0), python (>= 2.6.6-3~)
+Standards-Version: 3.9.2
+Homepage: http://sourceforge.net/projects/openxenmanager/
+Vcs-Git: git://git.debian.org/collab-maint/openxenmanager.git
+Vcs-Browser: http://git.debian.org/?p=collab-maint/openxenmanager.git;a=summary
+
+Package: openxenmanager
+Architecture: all
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: full-featured graphical management tool for xen using xenapi
+ OpenXenManager is a graphical interface to manage XenServer / Xen Cloud
+ Platform (XCP) hosts through the network
+ .
+ OpenXenManager is an open-source multiplatform clone of XenCenter (Citrix)

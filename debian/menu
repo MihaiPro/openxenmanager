@@ -1,0 +1,2 @@
+?package(openxenmanager):needs="X11" section="Applications/Utilities"\
+  title="openxenmanager" command="/usr/bin/openxenmanager"

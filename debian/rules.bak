@@ -1,0 +1,70 @@
+#!/usr/bin/make -f
+
+DH_VERBOSE=1
+
+
+PACKAGE := openxenmanager
+TMPDIR := $(CURDIR)/debian/$(PACKAGE)
+
+#%:
+#	dh $@ --with python2
+
+
+clean:
+	test -e debian/control
+	test 0 = "`id -u`" || (echo need root privileges; exit 1)
+	[ ! -f build-stamp ] || rm -f build-stamp
+	rm -rf *.pyc
+	rm -rf *.tmp
+	rm -rf *.so
+	rm -rf *.la
+	rm -rf *.exe
+	rm -rf *.patch
+
+build: build-arch build-indep
+
+build-arch: build-stamp
+build-indep: build-stamp
+
+build-stamp:
+	touch build-stamp
+
+install:
+	test -e debian/control
+	test 0 = "`id -u`" || (echo need root privileges; exit 1)
+	install -d --mode=0755 $(TMPDIR)
+	install -d --mode=0755 $(TMPDIR)/usr/bin
+	install -d --mode=0755 $(TMPDIR)/etc
+	install -d --mode=0755 $(TMPDIR)/usr/share/doc/$(PACKAGE)
+	install -d --mode=0755 $(TMPDIR)/usr/share/$(PACKAGE)
+	install --mode=0644 oxc.conf $(TMPDIR)/etc/
+	install --mode=0755 debian/openxenmanager.sh $(TMPDIR)/usr/bin/openxenmanager
+	install --mode=0644 *.py $(TMPDIR)/usr/share/$(PACKAGE)/
+	install --mode=0644 -d images $(TMPDIR)/usr/share/$(PACKAGE)/
+	install --mode=0644 -d images_map $(TMPDIR)/usr/share/$(PACKAGE)/
+	install --mode=0644 -d plugins $(TMPDIR)/usr/share/$(PACKAGE)/
+	install --mode=0644 -d pygtk_chart $(TMPDIR)/usr/share/$(PACKAGE)/
+	install --mode=0644 -d scripts $(TMPDIR)/usr/share/$(PACKAGE)/
+	dh_install -s
+
+binary-indep: build install
+
+# Build architecture-dependent files here.
+binary-arch: build install
+	dh_testdir
+	dh_testroot
+	#dh_installchangelogs Documentation/revision-history.txt
+	dh_installdocs
+	dh_python2
+	#dh_installinit --name laptop-mode -- defaults 99
+	#dh_installman man/*
+	dh_compress
+	dh_fixperms
+	dh_installdeb
+	dh_gencontrol
+	dh_md5sums
+	dh_builddeb
+
+binary: binary-indep binary-arch
+
+.PHONY: build build-stamp build-arch build-indep binary binary-indep binary-arch install

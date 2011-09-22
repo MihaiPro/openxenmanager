@@ -1,0 +1,5 @@
+openxenmanager for Debian
+-------------------------
+
+The source tarball is manually checked out of the upstream repository because
+upstream is shipping .pyc files in their source tarball. 

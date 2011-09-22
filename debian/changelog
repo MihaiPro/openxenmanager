@@ -1,0 +1,5 @@
+openxenmanager (0.r48-1) unstable; urgency=low
+
+  * Initial release (Closes: #638419)
+
+ -- Ritesh Raj Sarraf <rrs@debian.org>  Fri, 16 Sep 2011 16:59:26 +0530
