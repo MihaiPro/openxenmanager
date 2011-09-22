@@ -39,14 +39,14 @@ from capabilities import capabilities_text
 class oxcSERVERmenuitem:
     last_pool_data = []
     def pause_vm(self, ref):
-        res = self.connection.VM.pause(self.session_uuid, ref)
+        res = self.connection.Async.VM.pause(self.session_uuid, ref)
         if "Value" in res:
             self.track_tasks[res['Value']] = ref
         else:
             print res
 
     def unsuspend_vm(self, ref):
-        res = self.connection.VM.unsuspend(self.session_uuid, ref)
+        res = self.connection.Async.VM.unsuspend(self.session_uuid, ref)
         if "Value" in res:
             self.track_tasks[res['Value']] = ref
         else:
@@ -281,7 +281,7 @@ class oxcSERVERmenuitem:
                         self.all_network[network]['other_config']["automatic"] == "true":
                     list.append(["interface " + str(i), "auto-generated", self.all_network[network]['name_label'].replace('Pool-wide network associated with eth','Network '), network])
                     i = i + 1
-	        list2.append([self.all_network[network]['name_label'].replace('Pool-wide network associated with eth','Network '), network])
+            list2.append([self.all_network[network]['name_label'].replace('Pool-wide network associated with eth','Network '), network])
     
     def fill_management_networks(self, list, network_ref):
         list.clear()

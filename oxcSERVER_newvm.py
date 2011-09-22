@@ -83,14 +83,14 @@ class oxcSERVERnewvm:
             if storage['type'] != "iso" and storage['type'] != "udev":
                 if self.default_sr == sr:
                     default_sr = i
-		try:
-	            list.append([storage['name_label'],
-		     storage['name_description'],
-	             self.convert_bytes(storage['physical_size']),
-		     self.convert_bytes(int(storage['physical_size'])-int(storage['virtual_allocation'])), sr])
-		except:
+            try:
+                list.append([storage['name_label'],
+                    storage['name_description'],
+                    self.convert_bytes(storage['physical_size']),
+                    self.convert_bytes(int(storage['physical_size'])-int(storage['virtual_allocation'])), sr])
+            except:
                     pass
-                i = i + 1
+            i = i + 1
         return default_sr 
 
     def create_newvm(self, data):
@@ -193,13 +193,19 @@ class oxcSERVERnewvm:
         model, selected = selection.get_selected_rows()
         iters = [model.get_iter(path) for path in selected]
         i = 0
-        self.connection.VM.set_memory_static_min(self.session_uuid, vm_uuid, str(int(data['memorymb'])*1024*1024))
-        self.connection.VM.set_memory_dynamic_min(self.session_uuid, vm_uuid, str(int(data['memorymb'])*1024*1024))
-        self.connection.VM.set_memory_static_max(self.session_uuid, vm_uuid, str(int(data['memorymb'])*1024*1024))
-        self.connection.VM.set_memory_dynamic_max(self.session_uuid, vm_uuid, str(int(data['memorymb'])*1024*1024))
-        self.connection.VM.set_VCPUs_max (self.session_uuid, vm_uuid, str(int(data['numberofvcpus'])))
-        self.connection.VM.set_VCPUs_at_startup(self.session_uuid, vm_uuid, str(int(data['numberofvcpus'])))
-        self.connection.VM.set_PV_args(self.session_uuid, vm_uuid, data['entrybootparameters'])
+        memory = int(data['memorymb'])
+        res = self.connection.VM.set_memory_limits(self.session_uuid, ref, str(16777216),  str(int(memory*1024*1024)), str(int(memory*1024*1024)), str(int(memory*1024*1024)))
+        if "Value" in res:
+          self.track_tasks[res['Value']] = ref
+        else:
+           if res["ErrorDescription"][0] == "MESSAGE_METHOD_UNKNOWN":
+                self.connection.VM.set_memory_static_min(self.session_uuid, vm_uuid, str(memory*1024*1024))
+                self.connection.VM.set_memory_dynamic_min(self.session_uuid, vm_uuid, str(memory*1024*1024))
+                self.connection.VM.set_memory_static_max(self.session_uuid, vm_uuid, str(memory*1024*1024))
+                self.connection.VM.set_memory_dynamic_max(self.session_uuid, vm_uuid, str(memory*1024*1024))
+                self.connection.VM.set_VCPUs_max (self.session_uuid, vm_uuid, str(int(data['numberofvcpus'])))
+                self.connection.VM.set_VCPUs_at_startup(self.session_uuid, vm_uuid, str(int(data['numberofvcpus'])))
+                self.connection.VM.set_PV_args(self.session_uuid, vm_uuid, data['entrybootparameters'])
 
         for iter_ref in iters:
             vif_cfg['device'] = str(i)
