@@ -3,3 +3,8 @@ openxenmanager for Debian
 
 The source tarball is manually checked out of the upstream repository because
 upstream is shipping .pyc files in their source tarball. 
+
+The following command can be used to checkout the tarball after determining the
+correct svn revision:
+git archive --prefix=openxenmanager/ --format=tar HEAD \
+ | gzip > /tmp/openxenmanager_revNN.tar.gz
