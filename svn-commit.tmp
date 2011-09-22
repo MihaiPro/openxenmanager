@@ -1,4 +1,0 @@
-Compute values before the call to idle_add and pass them to the lambda function. (applied Marco Nenciarini patch)
---Esta línea y las que están debajo serán ignoradas--
-
-M    oxcSERVER.py

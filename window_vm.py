@@ -29,11 +29,58 @@ class oxcWindowVM(oxcWindowVMNetwork,oxcWindowVMStorage,oxcWindowVMSnapshot,oxcW
     """
     Class to manage window actions
     """
+
+    def update_memory_tab(self):
+        if self.treeview.get_cursor()[1]:
+                dynamicmin = self.xc_servers[self.selected_host].all_vms[self.selected_ref]["memory_dynamic_min"]
+                dynamicmax = self.xc_servers[self.selected_host].all_vms[self.selected_ref]["memory_dynamic_max"]
+                staticmin = self.xc_servers[self.selected_host].all_vms[self.selected_ref]["memory_static_min"]
+                staticmax = self.xc_servers[self.selected_host].all_vms[self.selected_ref]["memory_static_max"]
+                ishvm = self.xc_servers[self.selected_host].all_vms[self.selected_ref]["HVM_boot_policy"]
+                if ishvm:
+                    self.builder.get_object("lbldynamicmin").set_label(self.convert_bytes_mb(dynamicmin) + " MB")
+                    self.builder.get_object("lbldynamicmax").set_label(self.convert_bytes_mb(dynamicmax) + " MB")
+                    self.builder.get_object("lblstaticmax").set_label(self.convert_bytes_mb(staticmax) + " MB")
+
+                    self.builder.get_object("txtdynamicmin").set_text(self.convert_bytes_mb(dynamicmin))
+                    self.builder.get_object("txtdynamicmax").set_text(self.convert_bytes_mb(dynamicmax))
+                    self.builder.get_object("txtstaticmax").set_text(self.convert_bytes_mb(staticmax))
+                    self.builder.get_object("tabboxmem").set_current_page(0)
+                else:
+                    self.builder.get_object("lbldynamicmin1").set_label(self.convert_bytes_mb(dynamicmin) + " MB")
+                    self.builder.get_object("lbldynamicmax1").set_label(self.convert_bytes_mb(dynamicmax) + " MB")
+                    self.builder.get_object("txtfixedmemory").set_text(self.convert_bytes_mb(staticmax))
+
+                    self.builder.get_object("txtdynamicmin1").set_text(self.convert_bytes_mb(dynamicmin))
+                    self.builder.get_object("txtdynamicmax1").set_text(self.convert_bytes_mb(dynamicmax))
+
+                    self.builder.get_object("radiomemstatic").set_active(dynamicmin == dynamicmax)
+                    self.builder.get_object("radiomemdynamic").set_active(dynamicmin != dynamicmax)
+                    self.builder.get_object("tabboxmem").set_current_page(1)
+
+
+    def on_btapplymemory_clicked(self, widget, data=None):
+        dynamicmin = self.builder.get_object("txtdynamicmin").get_text()
+        dynamicmax = self.builder.get_object("txtdynamicmax").get_text()
+        staticmax = self.builder.get_object("txtstaticmax").get_text()
+        self.xc_servers[self.selected_host].set_memory(self.selected_ref, dynamicmin, dynamicmax, staticmax)
+
+    def on_btapplymemory1_clicked(self, widget, data=None):
+        if self.builder.get_object("radiomemstatic").get_active():
+            minimun = maximun = self.builder.get_object("txtfixedmemory").get_text()
+            self.xc_servers[self.selected_host].set_memory_limits(self.selected_ref, minimun, maximun, minimun, maximun)
+        else:
+            minimun = self.builder.get_object("txtdynamicmin1").get_text()
+            maximun = self.builder.get_object("txtdynamicmax1").get_text()
+            self.xc_servers[self.selected_host].set_memory_limits(self.selected_ref, minimun, maximun, minimun, maximun)
+
     def on_btsendctraltdel_clicked(self, widget, data=None):
         """
         Function called when you press "send ctrl alt del" on vm console
         """
         self.on_menuitem_tools_cad_activate(widget, data)
+
+
     def vnc_button_release(self, clipboard, data, user=None):
         global selection
         selection = data
@@ -60,6 +107,26 @@ class oxcWindowVM(oxcWindowVMNetwork,oxcWindowVMStorage,oxcWindowVMSnapshot,oxcW
             if text:
                 self.vnc.client_cut_text(text)
         clipboard.request_text(text_get_func)
+
+
+    def on_btundockconsole_clicked(self, widget, data=None):
+        """
+        Function called when you press "undock"
+        """
+        self.noclosevnc = True
+        self.builder.get_object("windowvncundock").show()
+        self.builder.get_object("console_area").remove(self.vnc)
+        self.builder.get_object("console_area3").add(self.vnc)
+
+    def on_btredockconsole_clicked(self, widget, data=None):
+        """
+        Function called when you press "redock"
+        """
+        self.builder.get_object("windowvncundock").hide()
+        self.builder.get_object("console_area3").remove(self.vnc)
+        self.builder.get_object("console_area").add(self.vnc)
+
+
 
     def on_btenterfullscreen_clicked(self, widget, data=None):
         """

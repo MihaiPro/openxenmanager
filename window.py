@@ -125,6 +125,7 @@ class oxcWindow(oxcWindowVM,oxcWindowHost,oxcWindowProperties,oxcWindowStorage,o
     selected_widget = None
     selected_state = None
 
+    noclosevnc = False
     # If "Use master password" is enabled, password typed is set on it
     password = None
     reattach_storage = False
@@ -192,16 +193,14 @@ class oxcWindow(oxcWindowVM,oxcWindowHost,oxcWindowProperties,oxcWindowStorage,o
         self.builder.set_translation_domain("oxc")
         # Add the file to gtk.Builder object
         self.builder.add_from_file(self.gladefile)
-
-
+        
         # Connect Windows and Dialog to delete-event (we want not destroy dialog/window)
         # delete-event is called when you close the window with "x" button
+        # TODO: csun: eventually it should be possible not to do this: http://stackoverflow.com/questions/4657344/
         for widget in self.builder.get_objects():
-            if type(widget) == type(gtk.Dialog()):
+            if isinstance(widget, gtk.Dialog) or \
+               isinstance(widget, gtk.Window) and gtk.Buildable.get_name(widget) != "window1":
                 widget.connect("delete-event", self.on_delete_event)
-            if type(widget) == type(gtk.Window()):
-                if gtk.Buildable.get_name(widget) != "window1":
-                    widget.connect("delete-event", self.on_delete_event)
         # Frequent objects
         self.txttreefilter = self.builder.get_object("txttreefilter")
 
@@ -232,8 +231,6 @@ class oxcWindow(oxcWindowVM,oxcWindowHost,oxcWindowProperties,oxcWindowStorage,o
                 style "my-style" { GtkComboBox::appears-as-list = 1 }
                 widget "*" style "my-style"
         ''')
-        # Set a default font 
-        self.window.get_settings().set_string_property('gtk-font-name', 'sans normal 8','');
 
         self.builder.connect_signals(self)
 
@@ -252,7 +249,6 @@ class oxcWindow(oxcWindowVM,oxcWindowHost,oxcWindowProperties,oxcWindowStorage,o
         self.modelfiltertpl = self.builder.get_object("listtemplates").filter_new()
         self.builder.get_object("treetemplates").set_model(self.modelfiltertpl)
         self.modelfiltertpl.set_visible_func(self.visible_func_templates)
-
 
         self.builder.get_object("networkcolumn1").set_property("model", self.builder.get_object("listimportnetworkcolumn"))
         self.builder.get_object("cellrenderercombo1").set_property("model", self.builder.get_object("listnewvmnetworkcolumn"))
@@ -278,7 +274,6 @@ class oxcWindow(oxcWindowVM,oxcWindowHost,oxcWindowProperties,oxcWindowStorage,o
         self.builder.get_object("checkshowcustomtpls").set_active(self.config["gui"]["show_custom_templates"] == "True")
         self.builder.get_object("checkshowlocalstorage").set_active(self.config["gui"]["show_local_storage"] == "True")
         self.builder.get_object("checkshowtoolbar").set_active(self.config["gui"]["show_toolbar"] == "True")
-        self.builder.get_object("checksetsyle").set_active(self.config["gui"]["set_style"] == "True")
         self.builder.get_object("checkshowhiddenvms").set_active(self.config["gui"]["show_hidden_vms"] == "True")
 
         if "maps" in self.config:
@@ -431,8 +426,6 @@ class oxcWindow(oxcWindowVM,oxcWindowHost,oxcWindowProperties,oxcWindowStorage,o
             self.builder.get_object("scalepropvmprio").add_mark(7, gtk.POS_BOTTOM, "")
             self.builder.get_object("scalepropvmprio").add_mark(8, gtk.POS_BOTTOM, "\nHighest")
 
-        # Set default colors
-        self.set_style_colors()
         # Manual function to set the default buttons on dialogs/window 
         # Default buttons could be pressed with enter without need do click
         self.set_window_defaults()
@@ -444,6 +437,8 @@ class oxcWindow(oxcWindowVM,oxcWindowHost,oxcWindowProperties,oxcWindowStorage,o
 
 
         self.windowmap = MyDotWindow(self.builder.get_object("viewportmap"), self.treestore, self.treeview)
+        
+        
 
     def adjust_scrollbar_performance(self):
         for widget in ["scrolledwindow47", "scrolledwindow48", "scrolledwindow49", "scrolledwindow50"]:
@@ -504,227 +499,6 @@ class oxcWindow(oxcWindowVM,oxcWindowHost,oxcWindowProperties,oxcWindowStorage,o
         for wid in widgets:
             # For each button indicate that it may be the default button
             self.builder.get_object(wid).set_activates_default(True)
-    def set_style_colors(self):
-        """
-        Function to set the colors for all widgets on application
-        If OXC style is checked use defined colors
-        Else we will use GTK colors
-        """
-        # If we use the OXC style... define the colors
-        if str(self.config["gui"]["set_style"]) == "True":
-            blue = gtk.gdk.color_parse("#d5e5f7")
-            white = gtk.gdk.color_parse("white")
-            header = gtk.gdk.color_parse("#e1edfb")
-            green = gtk.gdk.color_parse("#577B53")
-        else:
-            # If you prefer GTK colors... se colors to None
-            header = None
-            blue = None
-            white = None 
-            green = None
-        for i in range(1,3):
-            self.builder.get_object("newvmframe" + str(i)).modify_bg(gtk.STATE_NORMAL, white)
-        self.builder.get_object("window_newvm").modify_bg(gtk.STATE_NORMAL, blue)
-
-        for i in range(1,26):
-            if self.builder.get_object("eventbox" + str(i)):
-                self.builder.get_object("eventbox" + str(i)).modify_bg(gtk.STATE_NORMAL, white)
-        self.builder.get_object("treebootorder").set_border_width(50)
-
-        self.builder.get_object("framehome").modify_bg(gtk.STATE_NORMAL, gtk.gdk.color_parse("white"))
-        self.builder.get_object("treebootorder").modify_bg(gtk.STATE_INSENSITIVE, blue)
-        self.builder.get_object("treebootorder").modify_bg(gtk.STATE_NORMAL, blue)
-        self.builder.get_object("treebootorder").modify_bg(gtk.STATE_ACTIVE, blue)
-        self.builder.get_object("treebootorder").modify_bg(gtk.STATE_PRELIGHT, blue)
-        self.builder.get_object("treebootorder").modify_bg(gtk.STATE_SELECTED, blue)
-        self.builder.get_object("treebootorder").modify_bg(gtk.STATE_INSENSITIVE, blue)
-        for widget in ["eventbox26", "eventbox26", "eventbox27", "eventbox28",
-                       "eventbox29", "dialogaddnetwork", "eventbox30",
-                       "dialogeditnetwork", "eventbox31", "dialognetworkrestart",
-                       "dialogdeletehostnic", "dialogdeletehostnetwork", "eventbox32",
-                       "dialogdeletedisk", "dialogdeletevdi", "dialogremovenetwork",
-                       "dialogsnapshotname", "vmaddnewdisk", "windowcopyvm",
-                       "forcejoinpool", "windowalerts", "migratetool", "fileoutputxva",
-                       "statusreport", "dialogrevert"
-                       ]:
-            self.builder.get_object(widget).modify_bg(gtk.STATE_NORMAL, blue)
-        for i in range(33,40):
-            if self.builder.get_object("eventbox" + str(i)):
-                self.builder.get_object("eventbox" + str(i)).modify_bg(gtk.STATE_NORMAL, white)
-        self.builder.get_object("vmimport").modify_bg(gtk.STATE_NORMAL, blue)
-        self.builder.get_object("filechooserimportvm").modify_bg(gtk.STATE_NORMAL, blue)
-        self.builder.get_object("eventbox37").modify_bg(gtk.STATE_NORMAL, blue)
-        for i in range(0,5):
-            self.builder.get_object("eventimport" + str(i)).modify_bg(gtk.STATE_NORMAL, white)
-        for i in range(0,2):
-            self.builder.get_object("eventnewstg" + str(i)).modify_bg(gtk.STATE_NORMAL, white)
-        for i in range(40,50):
-            self.builder.get_object("eventbox" + str(i)).modify_bg(gtk.STATE_NORMAL, white)
-        self.builder.get_object("eventbox48").modify_bg(gtk.STATE_NORMAL, blue)
-        self.builder.get_object("eventbox49").modify_bg(gtk.STATE_NORMAL, blue)
-        self.builder.get_object("eventbox50").modify_bg(gtk.STATE_NORMAL, green)
-        self.builder.get_object("eventbox51").modify_bg(gtk.STATE_NORMAL, blue)
-        self.builder.get_object("eventbox52").modify_bg(gtk.STATE_NORMAL, blue)
-        self.builder.get_object("eventbox53").modify_bg(gtk.STATE_NORMAL, blue)
-        for i in range(54,68):
-            self.builder.get_object("eventbox" + str(i)).modify_bg(gtk.STATE_NORMAL, white)
-        self.builder.get_object("eventbox67").modify_bg(gtk.STATE_NORMAL, blue)
-        for i in range(68,105):
-            self.builder.get_object("eventbox" + str(i)).modify_bg(gtk.STATE_NORMAL, white)
-        self.builder.get_object("eventbox76").modify_bg(gtk.STATE_NORMAL, blue)
-
-        for widget in ["dialogdismissall", "maintenancemode", "changepassword",
-                     "dialogreconfigure", "detachstorage", "filebackupserver",
-                     "filerestoreserver", "filepoolbackupdb", "filepoolrestoredb",
-                     "detachhbalun", "formatdisklun", "reattachhbalun",
-                     "reattachformathbalun", "filesave", "fileopen",
-                     "filelicensekey", "newvmdisk", "dialogdeletevm",
-                     "warninglicense", "aboutdialog", "menu_snapshot",
-                     "dialogsnaptplname", "dialogsnaptplname", "dialogsnapshotdelete",
-                     "removeserverfrompool", "repairstorage", "menu_add_server",
-                     "menu_add_to_pool", "menu_m_add_server", "menu_server_add_to_pool", 
-                     "menu_pool_migrate", "migratetoolhelp","filesavereport", "updatemanager",
-                     "filenewupdate", "wcustomfields", "fileexportmap", "dialoglicensehost"
-                     ]:
-            self.builder.get_object(widget).modify_bg(gtk.STATE_NORMAL, blue)
-
-        for button in ["checksavepassword"]:
-            self.builder.get_object(button).modify_bg(gtk.STATE_NORMAL, blue)
-            self.builder.get_object(button).modify_bg(gtk.STATE_ACTIVE, blue)
-            self.builder.get_object(button).modify_bg(gtk.STATE_PRELIGHT, blue)
-            self.builder.get_object(button).modify_bg(gtk.STATE_SELECTED, blue)
-            self.builder.get_object(button).modify_bg(gtk.STATE_INSENSITIVE, blue)
-        for button in ["button1", "linkbutton1", "linkbutton2"]:
-            self.builder.get_object(button).modify_bg(gtk.STATE_NORMAL, white)
-            self.builder.get_object(button).modify_bg(gtk.STATE_ACTIVE, white)
-            self.builder.get_object(button).modify_bg(gtk.STATE_PRELIGHT, white)
-            self.builder.get_object(button).modify_bg(gtk.STATE_SELECTED, white)
-            self.builder.get_object(button).modify_bg(gtk.STATE_INSENSITIVE, white)
-        for button in ["btstgnewdisk","btstgproperties","btstgremove","btvmproperties",
-                "bthostproperties","btvmaddstorage","btstorageattach","btstorageproperties",
-                "btstoragedeactivate","btstoragedetach","btstoragedelete","bthostnicremove",
-                "bthostnicreadd","bthostnetworkproperties","bthostnetworkadd","bthostnetworkremove",
-                "btaddinterface","btpropertiesinterface","btremoveinterface","bttakesnapshot","button1",
-                "btsavefile","btcancelsavefile","btopenfile","btcancelopenfile","addnewvmstorage",
-                "editnewvmstorage","deletenewvmstorage","addnewvmnetwork","deletenewvmnetwork",
-                "acceptnewvmdisk","cancelnewvmdisk","acceptvmaddnewdisk","cancelvmaddnewdisk",
-                "btacceptsnapshotname","btcancelsnapshotname","btacceptsnaptplname","btcancelsnaptplname",
-                "btacceptsnapshotdelete","btcancelsnapshotdelete","btacceptattachdisk","btcancelattachdisk",
-                "acceptdeletedisk","canceldeletedisk","acceptaddnetwork","canceladdnetwork",
-                "acceptremovenetwork","cancelremovenetwork","dialogdelete_accept","dialogdelete_cancel",
-                "dialogdeletevdi_accept","dialogdeletevdi_cancel","windowcopyvm_copy","windowcopyvm_cancel",
-                "btalertdismiss","btalertdismissall","btclosewindowalerts","btdismissallyes","btdismissallno",
-                "btmoveup","btmovedown","btvmpropaccept","btvmpropcancel","connectAddServer","cancelAddServer",
-                "acceptdialogsyslogempty","acceptdialogdeletehostnetwork","canceldialogdeletehostnetwork",
-                "acceptdialogdeletehostnic","canceldialogdeletehostnic","btaddbondednic","btrembondednic",
-                "btacceptaddbond","btcanceladdbond","acceptnewnetwork","cancelnewnetwork",
-                "acceptdialogoptions","canceldialogoptions","acceptmasterpassword","cancelmasterpassword",
-                "accepteditnetwork","canceleditnetwork","acceptdialognetworkrestart","btimportaddnetwork",
-                "btimportdeletenetwork", "previousvmimport", "nextvmimport", "finishvmimport", "cancelvmimport",
-                "acceptmgmtinterface", "cancelmgmtinterface", "btmgmtnewinterface", "canceldialogreconfigure",
-                "acceptdialogreconfigure", "acceptnewpool", "cancelnewpool","acceptchangepassword","cancelchangepassword",
-                "acceptdetachstorage", "canceldetachstorage","savefilebackupserver", "cancelfilebackupserver",
-                "openfilerestoreserver", "cancelrestoreserver","btpoolproperties", "bttplproperties", "btstgproperties",
-                "accepformatdisklun", "cancelformatdisklun", "acceptdetachhbalun","acceptreattachhbalun", 
-                "cancelreattachhbalun", "cancelreattachformathbalun", "acceptareattachformathbalun", 
-                "acceptbreattachformathbalun", "acceptconfirmreboot", "cancelconfirmreboot", "accepthostdmesg",
-                "acceptmaintenancemode","cancelmaintenancemode","acceptfilepoolbackupdb", "cancelfilepoolbackupdb",
-                "acceptfilepoolrestoredb", "cancelfilepoolrestoredb","rebootconfirmpoolrestoredb","dryrunconfirmpoolrestoredb",
-                "cancelconfirmpoolrestoredb", "acceptsavescreenshot", "cancelsavescreenshot", "acceptremoveserverfrompool",
-                "cancelremoveserverfrompool", "acceptrepairstorage", "cancelrepairstorage", "acceptforcejoinpool",
-                "cancelforcejoinpool", "savefiledownloadlogs", "cancelfiledownloadlogs", "helpmigratetool",
-                "acceptmigratetool", "cancelmigratetool", "cancelfileoutputxva", "acceptfileoutputxva", "closemigratetoolhelp",
-                "acceptstatusreport", "cancelstatusreport", "clearallstatusreport", "selectallstatusreport",
-                "acceptfilereport", "cancelfilereport", "previouswindownewvm", "nextwindownewvm", "cancelwindownewvm",
-                "finishwindownewvm", "closeupdatemanager", "btuploadnewupdate", "btapplypatch", "btremoveupdate",
-                "acceptfilenewupdate", "cancelfilenewupdate", "btgraphtenmin",  "btgraphtwohours",
-                "btgraphoneweek", "btgraphoneyear", "btsendctraltdel", "btenterfullscreen", "btsendctrlaltdel2", 
-                "btexitfullscreen", "bteditcustomfields", "addcustomfield", "deletecustomfield", "cancelwcustomfields",
-                "acceptwcustomfields", "btexportmap", "rescanisos", "btnewstgsaoescan", "btsnapnewvm",
-                "btsnapcreatetpl", "btsnapexport", "btsnapexportvm", "btsnapdelete", "btsnaprevert", "acceptdialogrevert", "canceldialogrevert",
-                "acceptconfirmshutdown", "cancelconfirmshutdown", "acceptlicensehost", "cancellicensehost", "btcopytext"
-                ]:
-            self.builder.get_object(button).modify_bg(gtk.STATE_NORMAL, blue)
-            self.builder.get_object(button).modify_bg(gtk.STATE_ACTIVE, blue)
-            self.builder.get_object(button).modify_bg(gtk.STATE_PRELIGHT, blue)
-            self.builder.get_object(button).modify_bg(gtk.STATE_SELECTED, blue)
-            self.builder.get_object(button).modify_bg(gtk.STATE_INSENSITIVE, blue)
-        for combo in ["combovmstoragedvd"]:
-            self.builder.get_object(combo).modify_bg(gtk.STATE_NORMAL, blue)
-            self.builder.get_object(combo).modify_bg(gtk.STATE_ACTIVE, blue)
-            self.builder.get_object(combo).modify_bg(gtk.STATE_PRELIGHT, blue)
-            self.builder.get_object(combo).modify_bg(gtk.STATE_SELECTED, blue)
-            self.builder.get_object(combo).modify_bg(gtk.STATE_INSENSITIVE, blue)
-        for i in range(1,8): 
-            self.builder.get_object("lbltreesearch" + str(i)).get_parent().get_parent().get_parent().modify_bg(gtk.STATE_NORMAL, header)
-            self.builder.get_object("lbltreesearch" + str(i)).get_parent().get_parent().get_parent().modify_bg(gtk.STATE_PRELIGHT, header)
-        for i in range(1,5): 
-            self.builder.get_object("lbltreestg" + str(i)).get_parent().get_parent().get_parent().modify_bg(gtk.STATE_NORMAL, header)
-        for i in range(1,11): 
-            self.builder.get_object("lbltreevmstorage" + str(i)).get_parent().get_parent().get_parent().modify_bg(gtk.STATE_NORMAL, header)
-        for i in range(1,8): 
-            self.builder.get_object("lbltreehoststorage" + str(i)).get_parent().get_parent().get_parent().modify_bg(gtk.STATE_NORMAL, header)
-        for i in range(1,9): 
-            self.builder.get_object("lbltreehostnics" + str(i)).get_parent().get_parent().get_parent().modify_bg(gtk.STATE_NORMAL, header)
-        for i in range(1,8): 
-            self.builder.get_object("lbltreehostnetwork" + str(i)).get_parent().get_parent().get_parent().modify_bg(gtk.STATE_NORMAL, header)
-        for i in range(1,7): 
-            self.builder.get_object("lbltreevmnetwork" + str(i)).get_parent().get_parent().get_parent().modify_bg(gtk.STATE_NORMAL, header)
-        for i in range(1,5): 
-            self.builder.get_object("lbltreealerts" + str(i)).get_parent().get_parent().get_parent().modify_bg(gtk.STATE_NORMAL, header)
-
-        self.builder.get_object("eventbox11").modify_bg(gtk.STATE_NORMAL, blue)
-        self.builder.get_object("eventboxprop").modify_bg(gtk.STATE_NORMAL, blue)
-        self.builder.get_object("addserver").modify_bg(gtk.STATE_NORMAL, blue)
-        self.builder.get_object("dialog-addserver").modify_bg(gtk.STATE_NORMAL, blue)
-        self.builder.get_object("dialog-vbox23").modify_bg(gtk.STATE_NORMAL, blue)
-        self.builder.get_object("newstorage").modify_bg(gtk.STATE_NORMAL, blue)
-        self.builder.get_object("dialogvmprop").modify_bg(gtk.STATE_NORMAL, blue)
-        self.builder.get_object("menubar1").modify_bg(gtk.STATE_NORMAL, blue)
-        self.builder.get_object("window1").modify_bg(gtk.STATE_NORMAL, blue)
-        self.builder.get_object("scrolledwindow1").modify_bg(gtk.STATE_NORMAL, blue)
-        self.builder.get_object("savescreenshot").modify_bg(gtk.STATE_NORMAL, blue)
-        self.builder.get_object("filedownloadlogs").modify_bg(gtk.STATE_NORMAL, blue)
-        for i in range(1,60):
-            if self.builder.get_object("scrolledwindow" + str(i)):
-                if type(self.builder.get_object("scrolledwindow" + str(i)).get_hscrollbar()) != "NoneType":
-                    self.builder.get_object("scrolledwindow" + str(i)).get_hscrollbar().modify_bg(
-                            gtk.STATE_INSENSITIVE, blue)
-                    self.builder.get_object("scrolledwindow" + str(i)).get_hscrollbar().modify_bg(
-                            gtk.STATE_NORMAL, blue)
-                if type(self.builder.get_object("scrolledwindow" + str(i)).get_vscrollbar()) != "NoneType":
-                    self.builder.get_object("scrolledwindow" + str(i)).get_vscrollbar().modify_bg(
-                            gtk.STATE_INSENSITIVE, blue)
-                    self.builder.get_object("scrolledwindow" + str(i)).get_vscrollbar().modify_bg(
-                            gtk.STATE_NORMAL, blue)
-        self.builder.get_object("toolbar").modify_bg(gtk.STATE_NORMAL, blue)
-        self.builder.get_object("menu_vm").modify_bg(gtk.STATE_NORMAL, blue)
-        self.builder.get_object("hpaned1").modify_bg(gtk.STATE_NORMAL, blue)
-        for i in range(1,12):
-            self.builder.get_object("menu" + str(i)).modify_bg(gtk.STATE_NORMAL, blue)
-        self.builder.get_object("vpaned1").modify_bg(gtk.STATE_NORMAL, blue)
-        self.builder.get_object("vpaned2").modify_bg(gtk.STATE_NORMAL, blue)
-        self.builder.get_object("vpaned3").modify_bg(gtk.STATE_NORMAL, blue)
-        self.builder.get_object("vpaned4").modify_bg(gtk.STATE_NORMAL, blue)
-        self.builder.get_object("vpaned5").modify_bg(gtk.STATE_NORMAL, blue)
-        self.builder.get_object("tabbox").modify_bg(gtk.STATE_NORMAL, white)
-        self.builder.get_object("tabbox").modify_bg(gtk.STATE_ACTIVE, blue)
-        self.builder.get_object("treesearch").modify_bg(gtk.STATE_NORMAL, white)
-        self.builder.get_object("treesearch").modify_bg(gtk.STATE_ACTIVE, white)
-        self.builder.get_object("treesearch").modify_bg(gtk.STATE_PRELIGHT, white)
-        self.builder.get_object("treesearch").modify_bg(gtk.STATE_SELECTED, white)
-        self.builder.get_object("treesearch").modify_bg(gtk.STATE_INSENSITIVE, white)
-        self.builder.get_object("framesearch").modify_bg(gtk.STATE_NORMAL, blue)
-        self.builder.get_object("scrolledwindow13").modify_bg(gtk.STATE_NORMAL, blue)
-        self.builder.get_object("newstgreattachnfs").modify_bg(gtk.STATE_NORMAL, blue)
-        self.builder.get_object("newstgreattachaoe").modify_bg(gtk.STATE_NORMAL, blue)
-        self.builder.get_object("formatiscsidisk").modify_bg(gtk.STATE_NORMAL, blue)
-        self.builder.get_object("reattachformatiscsidisk").modify_bg(gtk.STATE_NORMAL, blue)
-        self.builder.get_object("dialog-vbox39").modify_bg(gtk.STATE_NORMAL, blue)
-        self.builder.get_object("confirmreboot").modify_bg(gtk.STATE_NORMAL, blue)
-        self.builder.get_object("confirmshutdown").modify_bg(gtk.STATE_NORMAL, blue)
-        self.builder.get_object("hostdmesg").modify_bg(gtk.STATE_NORMAL, blue)
- 
 
     def visible_func_templates(self, model, iter_ref, user_data=None): 
         name = self.builder.get_object("listtemplates").get_value(iter_ref, 1)
@@ -870,12 +644,12 @@ class oxcWindow(oxcWindowVM,oxcWindowHost,oxcWindowProperties,oxcWindowStorage,o
         Function called when you select a element from left tree
         Depending selected type show or hide differents tabs
         """
-        frames = ("framestggeneral","framestgdisks","framevmgeneral", "framevmstorage", "framevmnetwork", "framehostgeneral", "framehostnetwork", "framehoststorage",  "frameconsole", "framehostnics", "framesnapshots","frameperformance","frametplgeneral","framehome","frameconsole", "framepoolgeneral", "framelogs", "framesearch", "framemaps", "framehosthw")
+        frames = ("framestggeneral", "framememory","framestgdisks","framevmgeneral", "framevmstorage", "framevmnetwork", "framehostgeneral", "framehostnetwork", "framehoststorage",  "frameconsole", "framehostnics", "framesnapshots","frameperformance","frametplgeneral","framehome","frameconsole", "framepoolgeneral", "framelogs", "framesearch", "frameusers", "framemaps", "framehosthw")
         showframes = {
             "pool" : ["framepoolgeneral", "framelogs", "framesearch", "framemaps"],
             "home" : ["framehome"],
-            "vm"   : ["framevmgeneral", "framevmstorage", "framevmnetwork", "framelogs", "framesnapshots","frameperformance"],
-            "host" : ["framesearch","framehostgeneral", "framehostnetwork", "framehoststorage", "framelogs", "frameconsole", "framehostnics", "frameperformance", "framemaps"],
+            "vm"   : ["framevmgeneral", "framememory", "framevmstorage", "framevmnetwork", "framelogs", "framesnapshots","frameperformance"],
+            "host" : ["framesearch","framehostgeneral", "framehostnetwork", "framehoststorage", "framelogs", "frameconsole", "framehostnics", "frameperformance", "frameusers", "framemaps"],
             "template" : ["frametplgeneral","framevmnetwork","framehostgeneral"],
             "custom_template" : ["frametplgeneral","framevmnetwork", "framevmstorage", "framelogs"],
             "storage" :  ["framestggeneral","framestgdisks", "framelogs"],
@@ -900,6 +674,7 @@ class oxcWindow(oxcWindowVM,oxcWindowHost,oxcWindowProperties,oxcWindowStorage,o
                 self.builder.get_object("framehosthw").show()
             else:
                 self.builder.get_object("framehosthw").hide()
+
 
         elif self.selected_type == "template":
             self.xc_servers[self.selected_host].update_tab_template(self.selected_ref, self.builder)     
@@ -1137,12 +912,13 @@ class oxcWindow(oxcWindowVM,oxcWindowHost,oxcWindowProperties,oxcWindowStorage,o
         # Set as selected
         self.selected_tab = tab_label
         if tab_label != "VM_Console":
-            if self.tunnel:
+            if self.tunnel and not self.noclosevnc:
                 self.tunnel.close()
             # If vnc console was opened and we change to another, close it
             self.builder.get_object("menuitem_tools_cad").set_sensitive(False)
-            if hasattr(self,"vnc") and self.vnc:
+            if hasattr(self,"vnc") and self.vnc and not self.noclosevnc:
                 self.vnc.destroy()
+                self.builder.get_object("windowvncundock").hide()
                 self.vnc = None
             # Same on Windows
             if self.hWnd != 0:
@@ -1157,6 +933,13 @@ class oxcWindow(oxcWindowVM,oxcWindowHost,oxcWindowProperties,oxcWindowStorage,o
         if tab_label == "VM_Console":
             self.builder.get_object("menuitem_tools_cad").set_sensitive(True)
             self.treeview = self.builder.get_object("treevm") 
+            if hasattr(self,"vnc") and self.vnc:
+                if self.tunnel:
+                    self.tunnel.close()
+                self.vnc.destroy()
+                self.builder.get_object("windowvncundock").hide()
+                self.vnc = None
+
             if self.treeview.get_cursor()[1]:
                 state = self.selected_state
                 host =  self.selected_host
@@ -1254,6 +1037,10 @@ class oxcWindow(oxcWindowVM,oxcWindowHost,oxcWindowProperties,oxcWindowStorage,o
                         
                 else:
                     print  state
+        if tab_label == "VM_Memory":
+            self.update_memory_tab()
+            
+
         if tab_label == "VM_Storage":
             if self.treeview.get_cursor()[1]:
                 # liststorage contains the storage on VM
@@ -1322,6 +1109,29 @@ class oxcWindow(oxcWindowVM,oxcWindowHost,oxcWindowProperties,oxcWindowStorage,o
                 else:
                     self.xc_servers[host].fill_vm_log(self.selected_uuid, \
                                              treeviewlog, listlog)
+
+        elif tab_label == "HOST_Users":
+            if self.selected_type == "pool":
+                name =  self.xc_servers[self.selected_host].all_pools[self.selected_ref]['name_label']
+                externalauth =  self.xc_servers[self.selected_host].get_external_auth(self.xc_servers[self.selected_host]['master'])
+            else:
+                name = self.xc_servers[self.selected_host].all_hosts[self.selected_ref]['name_label']
+                externalauth =  self.xc_servers[self.selected_host].get_external_auth(self.selected_ref)
+
+
+            listusers = self.builder.get_object("listusers")
+            self.xc_servers[self.selected_host].fill_domain_users(self.selected_ref, listusers)
+
+
+            if externalauth[0] == "":
+                self.builder.get_object("btjoindomain").set_sensitive(True)
+                self.builder.get_object("btleavedomain").set_sensitive(False)
+                self.builder.get_object("lblusersdomain").set_text("AD is not currently configured for '" + self.selected_name + "'. To enable AD authentication, click Join.")
+            else:
+                self.builder.get_object("btleavedomain").set_sensitive(True)
+                self.builder.get_object("btjoindomain").set_sensitive(False)
+                self.builder.get_object("lblusersdomain").set_text("Pool/host " + self.selected_name + " belongs to domain '" + externalauth[1] + "'. To enable AD authentication, click Join.")
+
 
         elif tab_label == "HOST_Storage":
             if self.treeview.get_cursor()[1]:
@@ -1674,16 +1484,13 @@ class oxcWindow(oxcWindowVM,oxcWindowHost,oxcWindowProperties,oxcWindowStorage,o
         on the dialog.
         http://www.pygtk.org/articles/extending-our-pygtk-application/extending-our-pygtk-application.htm
         """
-        error_dlg = gtk.MessageDialog(type=gtk.MESSAGE_ERROR
-                    , message_format=error_string
-                    , buttons=gtk.BUTTONS_OK
-                    )
-        error_dlg.set_position(gtk.WIN_POS_CENTER_ALWAYS)
-        error_dlg.set_title(error_title);
-        error_dlg.set_modal(True);
-        error_dlg.set_urgency_hint(True);
-        error_dlg.run()
-        error_dlg.destroy() 
+        self.builder.get_object("walert").set_title(error_title)
+        self.builder.get_object("walerttext").set_text(error_string)
+        self.builder.get_object("walert").show()
+
+    def on_closewalert_clicked(self, widget, data=None):
+        self.builder.get_object("walert").hide()
+
 
     def push_alert(self, alert):
         """
@@ -1754,7 +1561,24 @@ class oxcWindow(oxcWindowVM,oxcWindowHost,oxcWindowProperties,oxcWindowStorage,o
             size = '%.1fb' % bytes
         return size
 
+
+    def convert_bytes_mb(self, n):
+        """
+        Convert byes to mb string
+        """
+        n = float(n)
+        K, M = 1 << 10, 1 << 20
+        if n >= M:
+            return '%d' % (float(n) / M)
+        elif n >= K:
+            return '%d' % (float(n) / K)
+        else:
+            return '%d' % n
+
+
 if __name__ == "__main__":
-        # Main function
-        wine = oxcWindow()
-        gtk.main()
+    # Main function
+    gobject.threads_init()
+    gtk.gdk.threads_init()
+    wine = oxcWindow()
+    gtk.main()
