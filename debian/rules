@@ -20,6 +20,8 @@ override_dh_clean:
 	rm -rf *.la
 	rm -rf *.exe
 	rm -rf *.patch
+	rm -rf *.rej
+	rm -rf *.orig
 
 override_dh_install:
 	test -e debian/control
