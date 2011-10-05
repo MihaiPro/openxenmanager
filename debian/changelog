@@ -1,8 +1,8 @@
-openxenmanager (0.r80-1) unstable; urgency=low
+openxenmanager (0.r80+dfsg-1) unstable; urgency=low
 
   * New upstream snapshot release (SVN r80) 
 
- -- Ritesh Raj Sarraf <rrs@debian.org>  Thu, 22 Sep 2011 20:16:44 +0530
+ -- Ritesh Raj Sarraf <rrs@debian.org>  Wed, 05 Oct 2011 23:53:47 +0530
 
 openxenmanager (0.r48-1) unstable; urgency=low
 
