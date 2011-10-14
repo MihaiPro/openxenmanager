@@ -76,6 +76,12 @@ License: other
  THE SOFTWARE.
 
 
+Files: pygtk_chart/*
+Copyright: Copyright (C) 2008 Sven Festersen <sven@sven-festersen.de>
+License: GPL-2+
+ The full text of the GPL-2 is distributed as in
+ /usr/share/common-licenses/GPL-2 on Debian systems.
+
 Files: *
 Copyright: Copyright (C) 2009 Alberto Gonzalez Rodriguez
 Copyright: Copyright (C) 2011 Cheng Sun
