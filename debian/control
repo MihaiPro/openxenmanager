@@ -10,7 +10,7 @@ Vcs-Browser: http://git.debian.org/?p=collab-maint/openxenmanager.git;a=summary
 
 Package: openxenmanager
 Architecture: all
-Depends: ${shlibs:Depends}, ${misc:Depends}
+Depends: ${shlibs:Depends}, ${misc:Depends}, python
 Description: full-featured graphical management tool for xen using xenapi
  OpenXenManager is a graphical interface to manage XenServer / Xen Cloud
  Platform (XCP) hosts through the network
