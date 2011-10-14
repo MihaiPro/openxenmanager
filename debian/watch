@@ -1,2 +1,3 @@
-version=3
-http://sf.net/openxenmanager/openxenmanager-(.*)\.tar\.gz
+# We download the source from the SVN repository and re-pack it manually by hand
+#version=3
+#http://sf.net/openxenmanager/openxenmanager-(.*)\.tar\.gz
