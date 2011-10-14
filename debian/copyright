@@ -19,6 +19,10 @@ Files: xtea.py
 Copyright: Copyright (C) Paul Chakravarti
 License: Public Domain
 
+Files: PixbufTextCellRenderer.py
+Copyright: Copyright (C) John Finlay <finlay at moeraki.com>
+License: Public Domain
+
 Files: put.py
 Copyright: Copyright (C) 2006 Sean B. Palmer
 License: Eiffel Forum License 2
