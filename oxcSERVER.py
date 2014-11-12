@@ -708,7 +708,7 @@ class oxcSERVER(oxcSERVERvm,oxcSERVERhost,oxcSERVERproperties,oxcSERVERstorage,o
                 # there was a indentation bug
                 if ds[name[:3]].count([name, desc]) == 0:
                     if name not in ("memory_internal_free", "xapi_free_memory_kib", "xapi_memory_usage_kib",  "xapi_live_memory_kib") and name[:6] != "pif___":
-                                ds[name[:3]].append([name, desc])
+                        ds[name[:3]].append([name, desc])
         if host:
             if os.path.exists(os.path.join(self.wine.pathconfig, "host_rrds.rrd")):
                 os.unlink(os.path.join(self.wine.pathconfig, "host_rrds.rrd"))
